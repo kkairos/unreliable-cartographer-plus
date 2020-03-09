@@ -54,35 +54,6 @@ SETTINGS = [
 	}
 	]
 
-"""DESC = {
-	"INPUT_SEL" : [
-	"\nMOVE:     REST: 5,. \n"\
-	"7 8 9     JUMP: F   \n"\
-	" \|/                \n"\
-	"4-@-6               \n"\
-	" /|\                \n"\
-	"1 2 3               ",
-	"\nMOVE:     REST: S,. \n"\
-	"Q W E     JUMP: F   \n"\
-	" \|/                \n"\
-	"A-@-D               \n"\
-	" /|\                \n"\
-	"Z X C               ",
-	"\nMOVE:     REST: .   \n"\
-	"Y K U     JUMP: F   \n"\
-	" \|/                \n"\
-	"H-@-L               \n"\
-	" /|\                \n"\
-	"B J N               "
-	],
-	"FONT_SEL" : [
-	"16x16 Stable         ",
-	"16x16 Working Set    ",
-	"16x16 \"Alpha\"        ",
-	],
-	"NO_SEL" : []
-}"""
-
 INPUT_SEL = [
 	"MOVE:    REST: 5,. \n"\
 	"\n7 8 9    JUMP: F   \n"\

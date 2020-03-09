@@ -146,8 +146,6 @@ def make_map(map,entities,G_TRAP_CHARS,player_floor):
 	y0,y1 = 7, 7
 	w0,w1 = 5, 7
 	h0,h1 = 5, 7
-	#rand_s_x, rand_s_y, rand_s_w, rand_s_h = rand_square(x0,x1,y0,y1,w0,w1,h0,h1)
-	#map.draw_house(rand_s_x, rand_s_y, rand_s_w, rand_s_h)
 	
 	xw = 4
 	rw = 6
@@ -219,7 +217,7 @@ def make_map(map,entities,G_TRAP_CHARS,player_floor):
 						map.t_[zdoub[0]][zdoub[1]] = newtile(constants.TERRAIN["wall"])
 
 	trapxys = []
-	for z in range(0,(24+player_floor*8)):
+	for z in range(0,(24+player_floor*12)):
 		trap_type = z%4
 		yrand = randint(2,map.height-3)
 		xrand = randint(2,map.width-3)

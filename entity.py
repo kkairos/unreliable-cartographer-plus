@@ -207,6 +207,7 @@ class Entity:
 
 			px = self.x*-1
 			py = self.y*-1
+			tries = 0
 			while map.t_[self.x+px][self.y+py].type != "floor":
 				randz = randint(0,4)
 				if randz == 0:
@@ -221,6 +222,10 @@ class Entity:
 				elif randz ==3:
 					px=0
 					py=1
+				tries +=1
+				if tries > 100:
+					map.t_[self.x+px][self.y+py] = mp.newtile(cx.TERRAIN["floor"])
+					map.walls_and_pits()
 			
 			boulder = Entity(
 				self.x+px,self.y+py,
@@ -277,7 +282,6 @@ class Entity:
 	
 	def fov(self,map,entities):
 	
-		#fov = [[False for y in range(map.height)] for x in range(map.width)]
 		fov = [[float(0.0) for y in range(map.height)] for x in range(map.width)]
 		eblock = [[False for y in range(map.height)] for x in range(map.width)]
 		

@@ -19,13 +19,6 @@ def clear_all(map,map_console,entities):
 		if map.t_[x.x][x.y].explored:
 			clear_e(map_console,x)
 
-def draw_s(menu_console,menu_selection):
-	tcod.console_set_default_foreground(menu_console, drawval.COLORS[14])
-	menu_console.put_char(2, constants.SETTINGS[menu_selection]["yval"], 16, tcod.BKGND_DEFAULT)
-
-def clear_s(menu_console,menu_selection):
-	menu_console.put_char(2, constants.SETTINGS[menu_selection]["yval"], ord(" "), tcod.BKGND_DEFAULT)
-
 def draw_e(map_console,fov,x,out_of_sight=False):
 	warm_fg, cool_fg = color_mods(drawval.COLORS[x.fg])
 	tcod.console_set_default_foreground(map_console, color_diff(warm_fg,cool_fg,fov[x.x][x.y]))
@@ -183,6 +176,9 @@ def legend_print(console,chars,x,y):
 
 	console.print(x,y+12,"Controls\n(TAB changes)",drawval.COLORS[15],drawval.COLORS[0],tcod.BKGND_DEFAULT,tcod.LEFT)
 	
+	console.print(x,y+23,"R: Reset",drawval.COLORS[15],drawval.COLORS[0],tcod.BKGND_DEFAULT,tcod.LEFT)
+	console.print(x,y+25,"ESC: Quit",drawval.COLORS[15],drawval.COLORS[0],tcod.BKGND_DEFAULT,tcod.LEFT)
+	
 	console.print(x,y+15,constants.INPUT_SEL[i_to_display],drawval.COLORS[15],drawval.COLORS[0],tcod.BKGND_DEFAULT,tcod.LEFT)
 
 def messageprint(z,s,m):
@@ -203,7 +199,6 @@ def messageprint(z,s,m):
 		m.append(s)
 	for x in range(0,z.height):
 		if m[len(m)-1-x] != "":
-			#z.print(0,z.height-1-x,"> " + m[len(m)-1-x],drawval.COLORS[15],drawval.COLORS[0],tcod.BKGND_DEFAULT,tcod.LEFT)
 			z.print(0,z.height-1-x,m[len(m)-1-x],drawval.COLORS[15],drawval.COLORS[0],tcod.BKGND_DEFAULT,tcod.LEFT)
 		
 #message construction for basic actions

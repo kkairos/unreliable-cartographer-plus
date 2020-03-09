@@ -103,6 +103,9 @@ def key_input(sym):
 		
 	if sym == tcv.K_f:
 		return {'jump': True}
+
+	if sym == tcv.K_r:
+		return {'reset': True}
 	
 	if sym == tcv.K_TAB or sym == tcv.K_KP_TAB:
 		return {'controlchange': True}

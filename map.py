@@ -115,7 +115,7 @@ class Map:
 			for x in range(self.width):
 				if self.t_[x][y].type in ("wall","solidwall"):
 					if randint(0,(player_floor+4)) > 5:
-						if randint(0,2) > 0:
+						if randint(0,player_floor) > 0:
 							self.t_[x][y] = Tile(cx.TERRAIN["pit"])
 						else:
 							self.t_[x][y] = Tile(cx.TERRAIN["floor"])
@@ -123,7 +123,10 @@ class Map:
 		for y in range(self.height):
 			for x in range(self.width):
 				if self.t_[x][y].type in ("wall","solidwall") and randint(0,player_floor) > 3:
-					self.t_[x][y] = Tile(cx.TERRAIN["floor"])
+					if randint(0,1+player_floor*3) < 4:
+						self.t_[x][y] = Tile(cx.TERRAIN["floor"])
+					else:
+						self.t_[x][y] = Tile(cx.TERRAIN["pit"])
 
 		walkable_map = self.walk_map(walkpairs)
 

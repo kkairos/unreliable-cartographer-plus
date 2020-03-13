@@ -212,7 +212,7 @@ class Entity:
 
 			px = randint(-1,1)
 			if px == 0:
-				py = randint(-1,1)
+				py = choice((-1,1))
 			else:
 				py = 0
 			tries = 0

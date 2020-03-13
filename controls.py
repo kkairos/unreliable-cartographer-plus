@@ -1,12 +1,12 @@
 import tcod
 import tcod.event as tcv
-import constants
+from constants import SETTINGS
 
 def key_input(sym):
 
 	#moving
 	
-	if constants.SETTINGS[0]["sel"] == 0:
+	if SETTINGS[0]["sel"] == 0:
 	
 		if sym == tcv.K_HOME or sym == tcv.K_KP_7:
 			return {'move': (-1, -1)}
@@ -35,7 +35,7 @@ def key_input(sym):
 		elif sym == tcv.K_PAGEDOWN or sym == tcv.K_KP_3:
 			return {'move': (1, 1)}
 	
-	elif constants.SETTINGS[0]["sel"] == 1:
+	elif SETTINGS[0]["sel"] == 1:
 	
 		if sym == tcv.K_HOME or sym == tcv.K_q:
 			return {'move': (-1, -1)}
@@ -64,7 +64,7 @@ def key_input(sym):
 		elif sym == tcv.K_PAGEDOWN or sym == tcv.K_c:
 			return {'move': (1, 1)}
 			
-	elif constants.SETTINGS[0]["sel"] == 2:
+	elif SETTINGS[0]["sel"] == 2:
 	
 		if sym == tcv.K_HOME or sym == tcv.K_y:
 			return {'move': (-1, -1)}

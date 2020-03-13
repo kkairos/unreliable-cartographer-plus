@@ -1,20 +1,28 @@
 import constants as cx
 import render as re
-import math
+from math import atan, pi
 import tcod.event
 import random
-import drawval
+from drawval import CHARS, COLORS
 import map as mp
-from random import randint
+from random import randint, choice
 from time import sleep
+
+class Stats:
+
+	def __init__(self,hp, at=3, df=0):
+		self.hp = hp
+		self.max_hp = hp
+		self.at = at
+		self.df = df
 
 class Entity:
 
 	def __init__(self,
 			x,y,
 			char_input = 2,
-			fg = 15,bg = 0,
-			hp = 10,speed = 10,
+			fg = "white",bg = "black",
+			hp = 1,
 			faction = cx.Faction.Enemy,
 			draw_order = cx.DrawOrder.NPC,
 			block_m = True,
@@ -24,7 +32,7 @@ class Entity:
 		self.char = char_input
 		self.fg = fg
 		self.bg = bg
-		self.stats = Stats(hp,speed)
+		self.stats = Stats(hp)
 		self.block_m = block_m
 		self.block_j = block_m
 		self.block_s = False
@@ -40,11 +48,8 @@ class Entity:
 		if (self.x+dx > -1 and self.x+dx < map.width and self.y+dy > -1 and self.y+dy < map.height):
 			
 			target_entity = blocking_entity(entities,self.x+dx,self.y+dy)
-			if target_entity is not None:
-				if target_entity.faction == self.faction:
-					self.talk(target_entity,message_console,messages)
-				elif target_entity.faction != self.faction:
-					self.attack(target_entity,message_console,messages)
+			if target_entity is not None and target_entity.faction != self.faction:
+				self.attack(target_entity,message_console,messages)
 				if returnval:
 					return True
 			elif map.t_[self.x+dx][self.y+dy].block_m:
@@ -54,7 +59,7 @@ class Entity:
 						self.y+=dy
 						self.stats.hp == 0
 						self.char == ord(" ")
-						map.t_[self.x][self.y] = mp.newtile(cx.TERRAIN["floor"])
+						map.t_[self.x][self.y] = mp.Tile(cx.TERRAIN["floor"])
 						map.walls_and_pits()
 						entities.remove(self)
 						re.messageprint(message_console,"The boulder filled in a pit!",messages)
@@ -89,7 +94,7 @@ class Entity:
 				self.x+=dx
 				self.y+=dy
 				return True
-			
+
 	def istrapped(self,map,entities,map_console,message_console,messages,player_gold):
 		trap_entity = trap_at(entities,self.x,self.y)
 		if (trap_entity is not None):
@@ -103,7 +108,7 @@ class Entity:
 					if trap_entity.dispname == "gold":
 						trap_entity.trapstate = 1
 						grand = randint(8,32)
-						message ="You collect " + str(grand) + " gold!"
+						message ="You collect " + str(grand) + chr(CHARS["gold"]) + "!"
 						if grand % 7 == 2:
 							message = "You trigger the Gold trap! (Just kidding! " + message + ")"
 						re.messageprint(message_console,message,messages)
@@ -124,15 +129,15 @@ class Entity:
 		trap_type = self.traptype
 		if trap_type == 0:
 			radius = 2
-			for z in drawval.CHARS["floor_give"]:
+			for z in CHARS["floor_give"]:
 				lc=0
 				for x in range(self.x-radius,self.x+radius+1):
 					for y in (self.y+lc,self.y-lc):
 						if x > -1 and x < map.width and y > -1 and y < map.height:
 							if map.t_[x][y].type == "floor":
 								map.t_[x][y].char = z
-								map.t_[x][y].fg = drawval.COLORS["floor-bg"]
-								map.t_[x][y].bg = drawval.COLORS["pit-bg"]
+								map.t_[x][y].fg = COLORS["floor-bg"]
+								map.t_[x][y].bg = COLORS["pit-bg"]
 					if x < self.x:
 						lc+=1
 					if x > self.x-1:
@@ -152,7 +157,7 @@ class Entity:
 				for y in (self.y+lc,self.y-lc):
 					if x > -1 and x < map.width and y > -1 and y < map.height:
 						if map.t_[x][y].type == "floor":
-							map.t_[x][y] = mp.newtile(cx.TERRAIN["pit"])
+							map.t_[x][y] = mp.Tile(cx.TERRAIN["pit"])
 				if x < self.x:
 					lc+=1
 				if x > self.x-1:
@@ -205,8 +210,11 @@ class Entity:
 		
 		elif trap_type == 3:
 
-			px = self.x*-1
-			py = self.y*-1
+			px = randint(-1,1)
+			if px == 0:
+				py = randint(-1,1)
+			else:
+				py = 0
 			tries = 0
 			while map.t_[self.x+px][self.y+py].type != "floor":
 				randz = randint(0,4)
@@ -224,15 +232,15 @@ class Entity:
 					py=1
 				tries +=1
 				if tries > 100:
-					map.t_[self.x+px][self.y+py] = mp.newtile(cx.TERRAIN["floor"])
+					map.t_[self.x+px][self.y+py] = mp.Tile(cx.TERRAIN["floor"])
 					map.walls_and_pits()
 			
 			boulder = Entity(
 				self.x+px,self.y+py,
-				char_input = drawval.CHARS["boulder"],
+				char_input = CHARS["boulder"],
 				fg = "boulder-fg",
 				bg = cx.TERRAIN["floor"]["bg"],
-				hp = 100,speed = 100,
+				hp = 1,
 				faction = cx.Faction.Enemy,
 				draw_order = cx.DrawOrder.NPC,
 				block_m = True,
@@ -240,7 +248,7 @@ class Entity:
 			boulder.persistent_x = px*-1
 			boulder.persistent_y = py*-1
 			entities.append(boulder)
-			boulder.block_j = True
+			boulder.block_j = False
 			boulder.block_s = True
 			boulder.stats.at = 100
 			boulder.stats.df = 3
@@ -256,13 +264,6 @@ class Entity:
 		self.trapstate = -1
 		for event in tcod.event.wait(0.5):
 			return
-
-	def talk(self,other,message_console,messages):
-
-		message = re.construct_message(self,other," talk to ", " talks to ")
-		message = ""
-		if message != "":
-			re.messageprint(message_console,message,messages)
 		
 	def attack(self,other,message_console,messages,dx=0,dy=0):
 	
@@ -298,9 +299,8 @@ class Entity:
 
 		for theta in range(len(cx.THETAS)):
 			
-			xd_i = float(self.x+0.5)
-			yd_i = float(self.y+0.5)
-			xd_d,yd_d = cx.THETAS[theta]
+			xd_i, yd_i = float(self.x+0.5), float(self.y+0.5)
+			xd_d, yd_d = cx.THETAS[theta]
 			fov[self.x][self.y] = 1
 			map.t_[self.x][self.y].explored = True
 
@@ -312,10 +312,9 @@ class Entity:
 				if r == 0 or ((int(xd_i) == self.x) and (int(yd_i) == self.y)):
 					fov[int(xd_i)][int(yd_i)] = float(1.0)
 				else:
-					falloff_mod = map.t_[int(xd_i)][int(yd_i)].falloff_exp
-					fov[int(xd_i)][int(yd_i)] = float(-1.4*math.atan((r-2)/2)/math.pi+0.6)
+					fov[int(xd_i)][int(yd_i)] = float(-1.4*atan((r-2)/2)/pi+0.6)
 				map.t_[int(xd_i)][int(yd_i)].explored = True
-				if (map.t_[int(xd_i)][int(yd_i)].block_s == True) or (eblock[int(xd_i)][int(yd_i)] == True):
+				if map.t_[int(xd_i)][int(yd_i)].block_s or eblock[int(xd_i)][int(yd_i)]:
 					break
 		return fov
 	
@@ -330,12 +329,3 @@ def trap_at(entities,x,y):
 		if ((entity.x == x) and (entity.y == y) and entity.istrap):
 			return entity
 	return None
-
-class Stats:
-
-	def __init__(self,hp,speed, at=3, df=0):
-		self.hp = hp
-		self.max_hp = hp
-		self.speed = speed
-		self.at = at
-		self.df = df

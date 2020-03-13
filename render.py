@@ -1,17 +1,16 @@
 import tcod
-import tcod.event as tcv
-import constants
+import constants as cx
 import drawval
 from random import randint
 
 # Movement
 def draw_all(map,map_console,entities,fov):
-	for y in constants.DrawOrder:
+	for y in cx.DrawOrder:
 		for x in entities:
 			if fov[x.x][x.y] >0:
 				if x.draw_order == y:
 					draw_e(map_console,fov,x,True)
-			elif (map.t_[x.x][x.y].explored == True and (x.draw_order == constants.DrawOrder.FLOOR)):
+			elif (map.t_[x.x][x.y].explored and (x.draw_order == cx.DrawOrder.FLOOR)):
 				draw_e(map_console,fov,x,True)
 	
 def clear_all(map,map_console,entities):
@@ -21,8 +20,8 @@ def clear_all(map,map_console,entities):
 
 def draw_e(map_console,fov,x,out_of_sight=False):
 	warm_fg, cool_fg = color_mods(drawval.COLORS[x.fg])
-	tcod.console_set_default_foreground(map_console, color_diff(warm_fg,cool_fg,fov[x.x][x.y]))
 	map_console.put_char(x.x, x.y, x.char, tcod.BKGND_DEFAULT)
+	map_console.fg[x.x,x.y] = color_diff(warm_fg,cool_fg,fov[x.x][x.y])
 	
 def clear_e(map_console,x):
 	map_console.put_char(x.x, x.y, ord(" "), tcod.BKGND_DEFAULT)
@@ -56,24 +55,16 @@ def draw_map(map,paper_map,map_console,fov):
 				map_console.bg[x,y] = cool_bg
 			elif paper_map.t_[x][y].explored == False:
 				if explored_around(map,x,y):
-					if paper_map.t_[x][y].type == "wall" or paper_map.t_[x][y].type == "floor" or paper_map.t_[x][y].type == "trap":
-						tmp_fg = paper_map.t_[x][y].fg
-						tmp_bg = color_darken(paper_map.t_[x][y].bg)
-					else:
-						tmp_fg = paper_map.t_[x][y].fg
-						tmp_bg = color_darken(paper_map.t_[x][y].bg)
-					map_console.fg[x,y] = tmp_fg
-					map_console.bg[x,y] = tmp_bg
+					map_console.fg[x,y] = paper_map.t_[x][y].fg
+					map_console.bg[x,y] = color_darken(paper_map.t_[x][y].bg)
 					paper_map.t_[x][y].explored = True
 
-# this may need to be cleaned up later
+#	this may need to be cleaned up later
+
+#	r = colortriplet[0], g = colortriplet[1], b = colortriplet[2]
 
 def color_darken(colortriplet):
-	r,g,b = colortriplet
-	r = int(r*0.85)
-	g = int(g*0.85)
-	b = int(b*0.85)
-	return (r,g,b)
+	return (int(colortriplet[0]*.85),int(colortriplet[1]*.85),int(colortriplet[2]*.85))
 
 def explored_around(map,x,y):
 		for z in range(0,9):
@@ -88,12 +79,10 @@ def color_diff(warmtriplet, cooltriplet, warm_mod):
 	wr,wg,wb = warmtriplet
 	cr,cg,cb = cooltriplet
 	
-	dr = int((cr-wr)*(1-warm_mod))
-	dg = int((cg-wg)*(1-warm_mod))
-	db = int((cb-wb)*(1-warm_mod))
+	dr,dg,db = int((cr-wr)*(1-warm_mod)), int((cg-wg)*(1-warm_mod)), int((cb-wb)*(1-warm_mod))
 	
 	return wr+dr,wg+dg,wb+db
-			
+
 def color_mods(colortriplet):
 	r,g,b = colortriplet
 	r2,g2,b2 = colortriplet
@@ -131,23 +120,10 @@ def draw_con(main_console,map_console,xpos,ypos):
 		1.0,1.0, #fg,bg alpha
 		None
 		)
-		
-def console_borders(z,x0,y0,x1,y1):
-	for x in range(x0+1,x1):
-		z.put_char(x, y0, drawval.LINES["top-bottom"], tcod.BKGND_DEFAULT)
-		z.put_char(x, y1, drawval.LINES["top-bottom"], tcod.BKGND_DEFAULT)
-	for y in range(y0+1,y1):
-		z.put_char(x0, y, drawval.LINES["left-right"], tcod.BKGND_DEFAULT)
-		z.put_char(x1, y, drawval.LINES["left-right"], tcod.BKGND_DEFAULT)
-	z.put_char(x0, y0, drawval.LINES["top-left"], tcod.BKGND_DEFAULT)
-	z.put_char(x1, y0, drawval.LINES["top-right"], tcod.BKGND_DEFAULT)
-	z.put_char(x0, y1, drawval.LINES["bottom-left"], tcod.BKGND_DEFAULT)
-	z.put_char(x1, y1, drawval.LINES["bottom-right"], tcod.BKGND_DEFAULT)
-	return
 
 def legend_print(console,chars,x,y):
 	
-	console.print(x,y,"Trap Legend",drawval.COLORS[15],drawval.COLORS[0],tcod.BKGND_DEFAULT,tcod.LEFT)
+	console.print(x,y,"Trap Legend",drawval.COLORS["white"],drawval.COLORS["black"],tcod.BKGND_DEFAULT,tcod.LEFT)
 	
 	y+=2
 	
@@ -160,9 +136,9 @@ def legend_print(console,chars,x,y):
 		console.fg[x][y+z2] = drawval.COLORS["map-red"]
 		console.fg[x+1][y+z2] = drawval.COLORS["map-red"]
 		console.fg[x+2][y+z2] = drawval.COLORS["map-red"]
-		console.print(x+4,y+z2,constants.TRAPS[z]["name"],drawval.COLORS[15],drawval.COLORS[0],tcod.BKGND_DEFAULT,tcod.LEFT)
+		console.print(x+4,y+z2,cx.TRAPS[z]["name"],drawval.COLORS["white"],drawval.COLORS["black"],tcod.BKGND_DEFAULT,tcod.LEFT)
 	
-	console.print(x,y+8,"Other",drawval.COLORS[15],drawval.COLORS[0],tcod.BKGND_DEFAULT,tcod.LEFT)
+	console.print(x,y+8,"Other",drawval.COLORS["white"],drawval.COLORS["black"],tcod.BKGND_DEFAULT,tcod.LEFT)
 	
 	console.put_char(x+0,y+10, ord("*"),tcod.BKGND_DEFAULT)
 	console.put_char(x+1,y+10, drawval.CHARS["gold"]+64,tcod.BKGND_DEFAULT)
@@ -170,19 +146,19 @@ def legend_print(console,chars,x,y):
 	console.fg[x][y+10] = drawval.COLORS["map-red"]
 	console.fg[x+1][y+10] = drawval.COLORS["map-red"]
 	console.fg[x+2][y+10] = drawval.COLORS["map-red"]
-	console.print(x+4,y+10,"Gold!",drawval.COLORS[15],drawval.COLORS[0],tcod.BKGND_DEFAULT,tcod.LEFT)
+	console.print(x+4,y+10,"Gold!",drawval.COLORS["white"],drawval.COLORS["black"],tcod.BKGND_DEFAULT,tcod.LEFT)
 
-	i_to_display = constants.SETTINGS[0]["sel"]
+	i_to_display = cx.SETTINGS[0]["sel"]
 
-	console.print(x,y+12,"Controls\n(TAB changes)",drawval.COLORS[15],drawval.COLORS[0],tcod.BKGND_DEFAULT,tcod.LEFT)
+	console.print(x,y+12,"Controls\n(TAB changes)",drawval.COLORS["white"],drawval.COLORS["black"],tcod.BKGND_DEFAULT,tcod.LEFT)
 	
-	console.print(x,y+23,"R: Reset",drawval.COLORS[15],drawval.COLORS[0],tcod.BKGND_DEFAULT,tcod.LEFT)
-	console.print(x,y+25,"ESC: Quit",drawval.COLORS[15],drawval.COLORS[0],tcod.BKGND_DEFAULT,tcod.LEFT)
+	console.print(x,y+23,"R: Reset",drawval.COLORS["white"],drawval.COLORS["black"],tcod.BKGND_DEFAULT,tcod.LEFT)
+	console.print(x,y+25,"ESC: Quit",drawval.COLORS["white"],drawval.COLORS["black"],tcod.BKGND_DEFAULT,tcod.LEFT)
 	
-	console.print(x,y+15,constants.INPUT_SEL[i_to_display],drawval.COLORS[15],drawval.COLORS[0],tcod.BKGND_DEFAULT,tcod.LEFT)
+	console.print(x,y+15,cx.INPUT_SEL[i_to_display],drawval.COLORS["white"],drawval.COLORS["black"],tcod.BKGND_DEFAULT,tcod.LEFT)
 
 def messageprint(z,s,m):
-	z.clear(32,drawval.COLORS[15],drawval.COLORS[0])
+	z.clear(32,drawval.COLORS["white"],drawval.COLORS["black"])
 	s = "> " + s
 	if len(s) > z.width:
 
@@ -199,7 +175,11 @@ def messageprint(z,s,m):
 		m.append(s)
 	for x in range(0,z.height):
 		if m[len(m)-1-x] != "":
-			z.print(0,z.height-1-x,m[len(m)-1-x],drawval.COLORS[15],drawval.COLORS[0],tcod.BKGND_DEFAULT,tcod.LEFT)
+			#z.print(0,z.height-1-x,m[len(m)-1-x],drawval.COLORS["white"],drawval.COLORS["black"],tcod.BKGND_DEFAULT,tcod.LEFT)
+			xl = 0
+			for c in m[len(m)-1-x]:
+				z.put_char(xl,z.height-1-x,ord(c),tcod.BKGND_DEFAULT)
+				xl+=1
 		
 #message construction for basic actions
 

@@ -1,5 +1,5 @@
 from enum import Enum
-import math
+from math import radians, cos, sin
 
 class Faction(Enum):
 	Ally = 0
@@ -13,9 +13,9 @@ class DrawOrder(Enum):
 THETAS = []
 
 for theta in range(1080):
-	theta = math.radians(float(theta/3))
-	xd_d = float(math.cos(theta))
-	yd_d = float(math.sin(theta))
+	theta = radians(float(theta/3))
+	xd_d = float(cos(theta))
+	yd_d = float(sin(theta))
 	THETAS.append((xd_d,yd_d))
 		
 LINES = {
@@ -75,11 +75,7 @@ INPUT_SEL = [
 	"B J N             "
 	]
 	
-INPUT_SEL_NAME = [
-	"standard numpad",
-	"laptop alternate numpad",
-	"vi-keys"
-	]
+INPUT_SEL_NAME = ["standard numpad", "laptop alternate numpad", "vi-keys"]
 
 walldraw = []
 for x in range(0,16):
@@ -89,9 +85,7 @@ pitdraw = []
 for x in range(0,8):
 	pitdraw.append(x+288)
 
-FONT_FILE = [
-	"uc-tiles-16x16.png",
-	]
+FONT_FILE = ["uc-tiles-16x16.png"]
 
 TRAPS = {
 	0 : {"name" : "Just the Pits"},
@@ -109,17 +103,15 @@ TERRAIN = {
 		"fg" : "wall-fg",
 		"bg" : "wall-bg",
 		"type" : "wall",
-		"falloff-exp" : float(2.0)
 		},
 	"solidwall": {
 		"block_m" : True,
 		"block_j" : True,
 		"block_s" : True,
-		"char" : 210,
-		"fg" : "black",
-		"bg" : "black",
+		"char" : 256,
+		"fg" : "wall-fg",
+		"bg" : "wall-bg",
 		"type" : "solidwall",
-		"falloff-exp" : float(2.0)
 		},
 	"floor" : {
 		"block_m" : False,
@@ -129,7 +121,6 @@ TERRAIN = {
 		"fg" : "floor-fg",
 		"bg" : "floor-bg",
 		"type" : "floor",
-		"falloff-exp" : float(2.0)
 		},
 	"stairs" : {
 		"block_m" : False,
@@ -139,7 +130,6 @@ TERRAIN = {
 		"fg" : "pit-fg",
 		"bg" : "pit-bg",
 		"type" : "floor",
-		"falloff-exp" : float(2.0)
 		},
 	"pit" : {
 		"block_m" : True,
@@ -149,16 +139,6 @@ TERRAIN = {
 		"fg" : "pit-fg",
 		"bg" : "pit-bg",
 		"type" : "pit",
-		"falloff-exp" : float(1.25),
-		},
-	"nav" : {
-		"block_m" : False,
-		"block_j" : False,
-		"block_s" : False,
-		"char" : ord(" "),
-		"fg" : "black",
-		"bg" : "black",
-		"type" : "nav",
-		"falloff-exp" : float(1.0),
-		},
+		}
+
 	}

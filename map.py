@@ -1,4 +1,4 @@
-import constants
+import constants as cx
 from random import randint
 import copy
 import drawval
@@ -6,32 +6,20 @@ import entity as ec
 
 class Tile:
 
-	def __init__(self,block_m,block_j,block_s,char,fg,bg,type,falloff_exp):
-		self.block_m = block_m
-		if block_s is None:
-			block_s = block_m
-		self.block_s = block_s
-		self.block_j = block_j
-		self.char = char
-		self.fg = drawval.COLORS[fg]
-		self.bg = drawval.COLORS[bg]
+	def __init__(self,terrain):
+		self.block_m = terrain["block_m"]
+		if terrain["block_s"] is None:
+			self.block_s = terrain["block_m"]
+		else:
+			self.block_s = terrain["block_s"] 
+		self.block_j = terrain["block_j"]
+		self.char = terrain["char"]
+		self.fg = drawval.COLORS[terrain["fg"]]
+		self.bg = drawval.COLORS[terrain["bg"]]
 		self.explored = False
-		self.type = type
-		self.falloff_exp = falloff_exp
+		self.type = terrain["type"]
 		self.lastx = 0
 		self.lasty = 0
-
-def newtile(terrain):
-	return Tile(
-		terrain["block_m"],
-		terrain["block_j"],
-		terrain["block_s"],
-		terrain["char"],
-		terrain["fg"],
-		terrain["bg"],
-		terrain["type"],
-		terrain["falloff-exp"]
-		)
 
 class Map:
 
@@ -41,20 +29,20 @@ class Map:
 		self.t_ = self.t_init()
 		
 	def t_init(self):
-		tiles = [[newtile(constants.TERRAIN["wall"]) for y in range(self.height)] for x in range(self.width)]
+		tiles = [[Tile(cx.TERRAIN["wall"]) for y in range(self.height)] for x in range(self.width)]
 
 		map_debug = 0
 		
 		for y in range(self.height):
 			for x in range(self.width):
-				tiles[x][y] = newtile(constants.TERRAIN["floor"])
+				tiles[x][y] = Tile(cx.TERRAIN["floor"])
 
 		for y in range(self.height):
 			for x in range(self.width):
 				if y==1 or x==1 or (y==self.height-2) or (x==self.width-2):
-					tiles[x][y] = newtile(constants.TERRAIN["wall"])
+					tiles[x][y] = Tile(cx.TERRAIN["wall"])
 				if y==0 or x==0 or (y==self.height-1) or (x==self.width-1):
-					tiles[x][y] = newtile(constants.TERRAIN["solidwall"])
+					tiles[x][y] = Tile(cx.TERRAIN["wall"])
 
 		if map_debug == 1:
 			for y in range(self.height):
@@ -62,21 +50,89 @@ class Map:
 					tiles[x][y].explored = True
 		return tiles
 
-	def walls_around(self,x,y):
+	def walls_around_reg(self,x,y,walkable_map,player_floor):
 		for z in range(0,9):
 			x2 = (x-1)+(z%3)
 			y2 = (y-1)+(z//3)
-			if x2 > -1 and x2 < self.width and y2 > -1 and y2 < self.height:
-				if self.t_[x2][y2].type != "wall" and self.t_[x2][y2].type != "solidwall":
-					return
-		self.t_[x][y] = newtile(constants.TERRAIN["solidwall"])
-		
-	def walls_and_pits(self):
+			if x2 > -1 and x2 < self.width and y2 > -1 and y2 < self.height and (walkable_map[x2][y2] == True):
+				return
+		self.t_[x][y] = Tile(cx.TERRAIN["solidwall"])
 	
+	def walls_around_rand(self,x,y,walkable_map,player_floor):
+		for z in range(0,9):
+			x2 = (x-1)+(z%3)
+			y2 = (y-1)+(z//3)
+			if x2 > -1 and x2 < self.width and y2 > -1 and y2 < self.height and (walkable_map[x2][y2] == True):
+				self.t_[x][y] = Tile(cx.TERRAIN["wall"])
+				return
+		if randint(0,1+player_floor) < 4:
+			if randint(0,1+player_floor*2) < 4:
+				self.t_[x][y] = Tile(cx.TERRAIN["floor"])
+			else:
+				self.t_[x][y] = Tile(cx.TERRAIN["pit"])
+	
+	def walk_map(self,walkpairs):
+		walkable_map = [[False for y in range(self.height)] for x in range(self.width)]
+		
+		while len(walkpairs) > 0:
+			for xypair in walkpairs:
+				x2,y2 = xypair
+				walkable_map[x2][y2] = True
+				for z in range(0,9):
+					tmp_x = x2-1+(z%3)
+					tmp_y = y2-1+(z//3)
+					if tmp_x > -1 and tmp_y > -1 and tmp_x < self.width and tmp_y < self.height:
+						if self.t_[tmp_x][tmp_y].type == "floor" and walkable_map[tmp_x][tmp_y] == False:
+							walkpairs.append((tmp_x,tmp_y))
+				
+				walkpairs.remove(xypair)
+
+		return walkable_map
+	
+	def walls_to_other(self,player_floor,paper_map):
+
+		walkable_map = [[False for y in range(self.height)] for x in range(self.width)]
+		walkpairs = []
+		for y in range(self.height):
+			for x in range(self.width):
+				if self.t_[x][y].type in ("floor","pit"):
+					walkable_map[x][y] = True
+					walkpairs.append((x,y))
+
 		for y in range(self.height):
 			for x in range(self.width):
 				if self.t_[x][y].type == "wall":
-					self.walls_around(x,y)
+					self.walls_around_reg(x,y,walkable_map,player_floor)
+
+		for y in range(self.height):
+			for x in range(self.width):
+				z = self.t_[x][y].type
+				paper_map.t_[x][y] = Tile(cx.TERRAIN[z])
+				paper_map.t_[x][y].fg = drawval.COLORS["map-black"]
+				paper_map.t_[x][y].bg = drawval.COLORS["map-white"]
+
+		for y in range(self.height):
+			for x in range(self.width):
+				if self.t_[x][y].type in ("wall","solidwall"):
+					if randint(0,(player_floor+4)) > 5:
+						if randint(0,2) > 0:
+							self.t_[x][y] = Tile(cx.TERRAIN["pit"])
+						else:
+							self.t_[x][y] = Tile(cx.TERRAIN["floor"])
+	
+		for y in range(self.height):
+			for x in range(self.width):
+				if self.t_[x][y].type in ("wall","solidwall") and randint(0,player_floor) > 3:
+					self.t_[x][y] = Tile(cx.TERRAIN["floor"])
+
+		walkable_map = self.walk_map(walkpairs)
+
+		for y in range(self.height):
+			for x in range(self.width):
+				if self.t_[x][y].type in ("wall","solidwall"):
+					self.walls_around_rand(x,y,walkable_map,player_floor)
+	
+	def walls_and_pits(self):
 	
 		for y in range(self.height):
 			for x in range(self.width):
@@ -86,13 +142,13 @@ class Map:
 					z_tmp += self.char_update_val(x,y+1,2,"wall")
 					z_tmp += self.char_update_val(x+1,y,4,"wall")
 					z_tmp += self.char_update_val(x-1,y,8,"wall")
-					self.t_[x][y].char = constants.walldraw[z_tmp]
+					self.t_[x][y].char = cx.walldraw[z_tmp]
 				if self.t_[x][y].type == "pit":
 					z_tmp = 0
 					z_tmp += self.char_update_val(x-1,y-1,1,"pit")
 					z_tmp += self.char_update_val(x,y-1,2,"pit")
 					z_tmp += self.char_update_val(x-1,y,4,"pit")
-					self.t_[x][y].char = constants.pitdraw[z_tmp]
+					self.t_[x][y].char = cx.pitdraw[z_tmp]
 
 	def char_update_val(self,x,y,v,type):
 		if ((x < 0) or (x > (self.width -1))):
@@ -115,11 +171,11 @@ class Map:
 
 	def line_h(self,x0,x1,y,line_type):
 		for x in range(x0,x1+1):
-			self.t_[x][y] = newtile(constants.TERRAIN[line_type])
+			self.t_[x][y] = Tile(cx.TERRAIN[line_type])
 			
 	def line_v(self,y0,y1,x,line_type):
 		for y in range(y0,y1+1):
-			self.t_[x][y] = newtile(constants.TERRAIN[line_type])
+			self.t_[x][y] = Tile(cx.TERRAIN[line_type])
 
 	def draw_square(self,x0,y0,w,h,line_type="wall",fill_type=""):
 		if fill_type != "":
@@ -178,10 +234,10 @@ def make_map(map,entities,G_TRAP_CHARS,player_floor):
 		for x in range(2,map.width-rw,xw+rw):
 			zzrand = randint(0,8)
 			if (zzrand % 3) == 1:
-				map.t_[x][y] = newtile(constants.TERRAIN["wall"])
-				map.t_[x+5][y] = newtile(constants.TERRAIN["wall"])
-				map.t_[x][y+5] = newtile(constants.TERRAIN["wall"])
-				map.t_[x+5][y+5] = newtile(constants.TERRAIN["wall"])
+				map.t_[x][y] = Tile(cx.TERRAIN["wall"])
+				map.t_[x+5][y] = Tile(cx.TERRAIN["wall"])
+				map.t_[x][y+5] = Tile(cx.TERRAIN["wall"])
+				map.t_[x+5][y+5] = Tile(cx.TERRAIN["wall"])
 			if zzrand == 1:
 				map.draw_square(x+1,y+1,3,3,"pit","wall")
 			if zzrand == 2:
@@ -196,25 +252,25 @@ def make_map(map,entities,G_TRAP_CHARS,player_floor):
 				for c in range(0,8):
 					zrand2 = randint(1,4)
 					zrand3= randint(1,4)
-					map.t_[x+zrand2][y+zrand3] = newtile(constants.TERRAIN["pit"])
+					map.t_[x+zrand2][y+zrand3] = Tile(cx.TERRAIN["pit"])
 			if zzrand == 7:
 				for c in range(0,8):
 					zrand2 = randint(1,4)
 					zrand3= randint(1,4)
-					map.t_[x+zrand2][y+zrand3] = newtile(constants.TERRAIN["wall"])
+					map.t_[x+zrand2][y+zrand3] = Tile(cx.TERRAIN["wall"])
 			if zzrand == 8:
 				for c in range(0,8):
 					zrand2 = randint(1,4)
 					zrand3 = randint(1,4)
 					zrand4 = randint(0,1)
 					if zrand4 == 0:
-						map.t_[x+zrand2][y+zrand3] = newtile(constants.TERRAIN["wall"])
+						map.t_[x+zrand2][y+zrand3] = Tile(cx.TERRAIN["wall"])
 					else:
-						map.t_[x+zrand2][y+zrand3] = newtile(constants.TERRAIN["pit"])
+						map.t_[x+zrand2][y+zrand3] = Tile(cx.TERRAIN["pit"])
 			if zzrand in (1,2,4):
 				if randint(0,4) > 1:
 					for zdoub in ((x+1,y),(x,y+1),(x+1,y+5),(x,y+4), (x+5,y+1),(x+4,y),(x+4,y+5),(x+5,y+4)):
-						map.t_[zdoub[0]][zdoub[1]] = newtile(constants.TERRAIN["wall"])
+						map.t_[zdoub[0]][zdoub[1]] = Tile(cx.TERRAIN["wall"])
 
 	trapxys = []
 	for z in range(0,(24+player_floor*12)):
@@ -234,7 +290,7 @@ def make_map(map,entities,G_TRAP_CHARS,player_floor):
 				xa,ya = entity.x,entity.y
 				distvals.append(abs(yrand-ya)+abs(xrand-xa))
 			distval = min(distvals)
-			if tries > 100:
+			if tries > 100 and entity_at_xy(entities,xrand,yrand) == False:
 				distval = 8
 
 		trapxys.append((xrand,yrand))
@@ -242,12 +298,12 @@ def make_map(map,entities,G_TRAP_CHARS,player_floor):
 			xrand,yrand,
 			char_input = G_TRAP_CHARS[trap_type],
 			fg = "floor-trap-fg",
-			bg = constants.TERRAIN["floor"]["bg"],
-			hp = 1,speed = 1,
-			faction = constants.Faction.Enemy,
-			draw_order = constants.DrawOrder.FLOOR,
+			bg = cx.TERRAIN["floor"]["bg"],
+			hp = 1,
+			faction = cx.Faction.Enemy,
+			draw_order = cx.DrawOrder.FLOOR,
 			block_m = False,
-			dispname = constants.TRAPS[trap_type]["name"])
+			dispname = cx.TRAPS[trap_type]["name"])
 		trap.istrap = True
 		trap.traptype = trap_type
 		entities.append(trap)
@@ -268,10 +324,10 @@ def make_map(map,entities,G_TRAP_CHARS,player_floor):
 			xrand,yrand,
 			char_input = drawval.CHARS["gold"],
 			fg = "gold-fg",
-			bg = constants.TERRAIN["floor"]["bg"],
-			hp = 1,speed = 1,
-			faction = constants.Faction.Enemy,
-			draw_order = constants.DrawOrder.FLOOR,
+			bg = cx.TERRAIN["floor"]["bg"],
+			hp = 1,
+			faction = cx.Faction.Enemy,
+			draw_order = cx.DrawOrder.FLOOR,
 			block_m = False,
 			dispname = "gold")
 		gold.istrap = True
@@ -292,18 +348,18 @@ def make_map(map,entities,G_TRAP_CHARS,player_floor):
 		distval = abs(yrand-ya)+abs(xrand-xa)
 		if tries > 100:
 			distval = 8
-	if player_floor < 3:
+	if player_floor < 5:
 		stairs = ec.Entity(
 			xrand,yrand,
 			char_input = drawval.CHARS["stairs"],
 			fg = "pit-fg",
 			bg = "pit-bg",
-			hp = 1,speed = 1,
-			faction = constants.Faction.Enemy,
-			draw_order = constants.DrawOrder.FLOOR,
+			hp = 1,
+			faction = cx.Faction.Enemy,
+			draw_order = cx.DrawOrder.FLOOR,
 			block_m = False,
 			dispname = "stairs")
-		map.t_[xrand][yrand] = newtile(constants.TERRAIN["stairs"])
+		map.t_[xrand][yrand] = Tile(cx.TERRAIN["stairs"])
 		stairs.istrap = True
 		for entity in entities:
 			if entity.x == stairs.x and entity.y ==stairs.y:
@@ -315,9 +371,9 @@ def make_map(map,entities,G_TRAP_CHARS,player_floor):
 			char_input = drawval.CHARS["artifact"],
 			fg = "gold-fg",
 			bg = "tile-bg",
-			hp = 1,speed = 1,
-			faction = constants.Faction.Enemy,
-			draw_order = constants.DrawOrder.FLOOR,
+			hp = 1,
+			faction = cx.Faction.Enemy,
+			draw_order = cx.DrawOrder.FLOOR,
 			block_m = False,
 			dispname = "artifact")
 		artifact.istrap = True
@@ -326,9 +382,12 @@ def make_map(map,entities,G_TRAP_CHARS,player_floor):
 				entities.remove(entity)
 		entities.append(artifact)
 	
+	paper_map = Map(map.width,map.height)
+	
+	map.walls_to_other(player_floor,paper_map)
 	map.walls_and_pits()
 
-	return
+	return paper_map
 
 def entity_at_xy(entities,x,y):
 	for entity in entities:

@@ -57,6 +57,14 @@ class Map:
 			if x2 > -1 and x2 < self.width and y2 > -1 and y2 < self.height and (walkable_map[x2][y2] == True):
 				return
 		self.t_[x][y] = Tile(cx.TERRAIN["solidwall"])
+
+	def walls_around_solidwall(self,x,y,walkable_map,player_floor):
+		for z in range(0,9):
+			x2 = (x-1)+(z%3)
+			y2 = (y-1)+(z//3)
+			if x2 > -1 and x2 < self.width and y2 > -1 and y2 < self.height and (walkable_map[x2][y2] == True):
+				self.t_[x][y] = Tile(cx.TERRAIN["wall"])
+				return
 	
 	def walls_around_rand(self,x,y,walkable_map,player_floor):
 		for z in range(0,9):
@@ -66,7 +74,7 @@ class Map:
 				self.t_[x][y] = Tile(cx.TERRAIN["wall"])
 				return
 		if randint(0,1+player_floor) < 4:
-			if randint(0,1+player_floor*2) < 4:
+			if randint(0,1+player_floor*3) < 4:
 				self.t_[x][y] = Tile(cx.TERRAIN["floor"])
 			else:
 				self.t_[x][y] = Tile(cx.TERRAIN["pit"])
@@ -103,6 +111,8 @@ class Map:
 			for x in range(self.width):
 				if self.t_[x][y].type == "wall":
 					self.walls_around_reg(x,y,walkable_map,player_floor)
+				if self.t_[x][y].type == "solidwall":
+					self.walls_around_solidwall(x,y,walkable_map,player_floor)
 
 		for y in range(self.height):
 			for x in range(self.width):
@@ -114,7 +124,7 @@ class Map:
 		for y in range(self.height):
 			for x in range(self.width):
 				if self.t_[x][y].type in ("wall","solidwall"):
-					if randint(0,(player_floor+4)) > 5:
+					if randint(0,(player_floor+8)) > 9:
 						if randint(0,player_floor) > 0:
 							self.t_[x][y] = Tile(cx.TERRAIN["pit"])
 						else:
@@ -212,14 +222,14 @@ def make_map(map,entities,G_TRAP_CHARS,player_floor):
 	rh = 6
 	for y in range(rh+2,map.height-rh,xh+rh):
 		for x in range(rw+2,map.width-rw,xw+rw):
-			map.draw_square(x,y,xw-1,xh-1,"wall","wall")
+			map.draw_square(x,y,xw-1,xh-1,"wall","solidwall")
 			zrand = randint(0,3)
 			zh = 6
 			zw = 6
-			map.draw_square(x-rw,y,rw-1,xh-1,"wall","wall")
-			map.draw_square(x+xw,y,rw-1,xh-1,"wall","wall")
-			map.draw_square(x,y-rh,xw-1,rh-1,"wall","wall")
-			map.draw_square(x,y+xh,xw-1,rh-1,"wall","wall")
+			map.draw_square(x-rw,y,rw-1,xh-1,"wall","solidwall")
+			map.draw_square(x+xw,y,rw-1,xh-1,"wall","solidwall")
+			map.draw_square(x,y-rh,xw-1,rh-1,"wall","solidwall")
+			map.draw_square(x,y+xh,xw-1,rh-1,"wall","solidwall")
 			if zrand != 0: #right
 				zzrand = randint(x+xw+1,x+xw+rw-3)
 				map.line_from(zzrand,zzrand,y,y+xh,"floor")
@@ -355,8 +365,8 @@ def make_map(map,entities,G_TRAP_CHARS,player_floor):
 		stairs = ec.Entity(
 			xrand,yrand,
 			char_input = drawval.CHARS["stairs"],
-			fg = "pit-fg",
-			bg = "pit-bg",
+			fg = "stairs-fg",
+			bg = "stairs-bg",
 			hp = 1,
 			faction = cx.Faction.Enemy,
 			draw_order = cx.DrawOrder.FLOOR,
@@ -389,6 +399,7 @@ def make_map(map,entities,G_TRAP_CHARS,player_floor):
 	
 	map.walls_to_other(player_floor,paper_map)
 	map.walls_and_pits()
+	paper_map.walls_and_pits()
 
 	return paper_map
 

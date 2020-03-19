@@ -3,6 +3,9 @@ from random import randint
 import copy
 import drawval
 import entity as ec
+from controls import key_input
+import tcod, tcod.event
+from time import sleep
 
 class Tile:
 
@@ -144,6 +147,8 @@ class Map:
 			for x in range(self.width):
 				if self.t_[x][y].type in ("wall","solidwall"):
 					self.walls_around_rand(x,y,walkable_map,player_floor)
+					
+		return walkable_map
 	
 	def walls_and_pits(self):
 	
@@ -190,7 +195,16 @@ class Map:
 		for y in range(y0,y1+1):
 			self.t_[x][y] = Tile(cx.TERRAIN[line_type])
 
-	def draw_square(self,x0,y0,w,h,line_type="wall",fill_type=""):
+	def draw_square(self,x,y,w,h,line_type="wall",fill_type=""):
+		if fill_type != "":
+			for z in range(x,x+w):
+				self.line_from(z,z,y,y+h,fill_type)
+		self.line_from(x,x+w,y,y,line_type)
+		self.line_from(x,x+w,y+h,y+h,line_type)
+		self.line_from(x,x,y,y+h,line_type)
+		self.line_from(x+w,x+w,y,y+h,line_type)
+
+	def old_draw_square(self,x0,y0,w,h,line_type="wall",fill_type=""):
 		if fill_type != "":
 			for x in range(x0,x0+w+1):
 				self.line_from(x,x,y0,y0+h,fill_type)
@@ -209,82 +223,90 @@ def rand_square(x0,x1,y0,y1,w0,w1,h0,h1):
 	rand_s_w, rand_s_h = randint(w0,w1), randint(h0,h1)
 	
 	return rand_s_x, rand_s_y, rand_s_w, rand_s_h
+
+def divide_map(map,x,y,w,h,tiletype,defdivide):
 	
+	mapadds = []
+	
+	mapadds_tries = 0
+	while len(mapadds) == 0 and mapadds_tries < 2:
+		if defdivide or randint(0,12) > 0:
+			divrand = randint(0,1)
+			if divrand == 0 and w > 7:
+				xrand = randint(x+3,x+w-3)
+				mapadds.append([x,y,xrand-x,h])
+				mapadds.append([xrand,y,x+w-xrand,h])
+				if map.t_[xrand][y].type != "door" and map.t_[xrand][y+h].type != "door":
+					map.line_from(xrand,xrand,y,y+h,tiletype)
+					yrand = randint(y+1,y+h-1)
+					map.t_[xrand][yrand] = Tile(cx.TERRAIN["door"])
+			elif divrand == 1 and h > 7:
+				yrand = randint(y+3,y+h-3)
+				mapadds.append([x,y,w,yrand-y])
+				mapadds.append([x,yrand,w,y+h-yrand])
+				if map.t_[x][yrand].type != "door" and map.t_[x+w][yrand].type != "door":
+					map.line_from(x,x+w,yrand,yrand,tiletype)
+					xrand = randint(x+1,x+w-1)
+					map.t_[xrand][yrand] = Tile(cx.TERRAIN["door"])
+		mapadds_tries+=1
+		
+	return mapadds
+
+def decorate_room(map,rx,ry,rw,rh):
+	zrand = randint(0,1)
+	if zrand == 0:
+		map.draw_square(rx+1,ry+1,rw-2,rh-2,"floor","pit")
+	if zrand == 1:
+		map.draw_square(rx+2,ry+2,rw-4,rh-4,"wall","solidwall")
+	if randint(0,1) == 0:
+		map.t_[rx+1][ry+1] = Tile(cx.TERRAIN["pit"])
+	if randint(0,1) == 1:
+		map.t_[rx+rw-1][ry+1] = Tile(cx.TERRAIN["pit"])
+	if randint(0,1) == 1:
+		map.t_[rx+rw-1][ry+rh-1] = Tile(cx.TERRAIN["pit"])
+	if randint(0,1) == 1:
+		map.t_[rx+1][ry+rh-1] = Tile(cx.TERRAIN["pit"])
+
 def make_map(map,entities,G_TRAP_CHARS,player_floor):
-	x0,x1 = 5, 5
-	y0,y1 = 7, 7
-	w0,w1 = 5, 7
-	h0,h1 = 5, 7
+
+	map.draw_square(0,0,map.width-1,map.height-1,"wall","wall")
+	map.draw_square(2,2,map.width-5,map.height-5,"wall","floor")
+
+	regions = [[2,2,map.width-5,map.height-5]]
 	
-	xw = 4
-	rw = 6
-	xh = 4
-	rh = 6
-	for y in range(rh+2,map.height-rh,xh+rh):
-		for x in range(rw+2,map.width-rw,xw+rw):
-			map.draw_square(x,y,xw-1,xh-1,"wall","solidwall")
-			zrand = randint(0,3)
-			zh = 6
-			zw = 6
-			map.draw_square(x-rw,y,rw-1,xh-1,"wall","solidwall")
-			map.draw_square(x+xw,y,rw-1,xh-1,"wall","solidwall")
-			map.draw_square(x,y-rh,xw-1,rh-1,"wall","solidwall")
-			map.draw_square(x,y+xh,xw-1,rh-1,"wall","solidwall")
-			if zrand != 0: #right
-				zzrand = randint(x+xw+1,x+xw+rw-3)
-				map.line_from(zzrand,zzrand,y,y+xh,"floor")
-			if zrand != 1: #left
-				zzrand = randint(x-rw+1,x-2)
-				map.line_from(zzrand,zzrand,y,y+xh,"floor")
-			if zrand != 2: #up
-				zzrand = randint(y-rh+1,y-2)
-				map.line_from(x,x+xw,zzrand,zzrand,"floor")
-			if zrand != 3: #down
-				zzrand = randint(y+xh+1,y+xh+rh-3)
-				map.line_from(x,x+xw,zzrand,zzrand,"floor")
+	z = 0
+	div_limit = 100
+	for region in regions:
+		rx,ry,rw,rh = region
+		if z < 3:
+			mapadds = divide_map(map,rx,ry,rw,rh,"wall",True)
+			if len(mapadds) == 0 and rw > 3 and rh > 3:
+				decorate_room(map,rx,ry,rw,rh)
+		else:
+			mapadds = divide_map(map,rx,ry,rw,rh,"wall",False)
+			if len(mapadds) == 0 and rw > 3 and rh > 3:
+				decorate_room(map,rx,ry,rw,rh)
+		z+=1
+		if mapadds is not None:
+			regions.extend(mapadds)
+	
+	z = 0
 
-	for y in range(2,map.height-rh,xh+rh):
-		for x in range(2,map.width-rw,xw+rw):
-			zzrand = randint(0,8)
-			if (zzrand % 3) == 1:
-				map.t_[x][y] = Tile(cx.TERRAIN["wall"])
-				map.t_[x+5][y] = Tile(cx.TERRAIN["wall"])
-				map.t_[x][y+5] = Tile(cx.TERRAIN["wall"])
-				map.t_[x+5][y+5] = Tile(cx.TERRAIN["wall"])
-			if zzrand == 1:
-				map.draw_square(x+1,y+1,3,3,"pit","wall")
-			if zzrand == 2:
-				map.draw_square(x+1,y+1,3,3,"pit","floor")
-			if zzrand == 3:
-				map.draw_square(x+2,y+2,1,1,"wall","solidwall")
-			if zzrand == 4:
-				map.draw_square(x+1,y+1,3,3,"pit","pit")
-			if zzrand == 5:
-				map.draw_square(x+1,y+1,3,3,"wall","wall")
-			if zzrand == 6:
-				for c in range(0,8):
-					zrand2 = randint(1,4)
-					zrand3= randint(1,4)
-					map.t_[x+zrand2][y+zrand3] = Tile(cx.TERRAIN["pit"])
-			if zzrand == 7:
-				for c in range(0,8):
-					zrand2 = randint(1,4)
-					zrand3= randint(1,4)
-					map.t_[x+zrand2][y+zrand3] = Tile(cx.TERRAIN["wall"])
-			if zzrand == 8:
-				for c in range(0,8):
-					zrand2 = randint(1,4)
-					zrand3 = randint(1,4)
-					zrand4 = randint(0,1)
-					if zrand4 == 0:
-						map.t_[x+zrand2][y+zrand3] = Tile(cx.TERRAIN["wall"])
-					else:
-						map.t_[x+zrand2][y+zrand3] = Tile(cx.TERRAIN["pit"])
-			if zzrand in (1,2,4):
-				if randint(0,4) > 1:
-					for zdoub in ((x+1,y),(x,y+1),(x+1,y+5),(x,y+4), (x+5,y+1),(x+4,y),(x+4,y+5),(x+5,y+4)):
-						map.t_[zdoub[0]][zdoub[1]] = Tile(cx.TERRAIN["wall"])
-
+	for y in range(1,map.height-1):
+		for x in range(1,map.width-1):
+			if map.t_[x][y].type == "door":
+				map.t_[x][y] = Tile(cx.TERRAIN["floor"])
+			if map.t_[x][y].type == "wall":
+				if randint(0,29) == 0:
+					if map.t_[x-1][y].type == "wall" and map.t_[x+1][y].type == "wall":
+						if map.t_[x][y-1].type != "wall" and map.t_[x][y+1].type != "wall":
+							map.t_[x][y] = Tile(cx.TERRAIN["floor"])
+					if map.t_[x][y-1].type == "wall" and map.t_[x][y+1].type == "wall":
+						if map.t_[x-1][y].type != "wall" and map.t_[x+1][y].type != "wall":
+							map.t_[x][y] = Tile(cx.TERRAIN["floor"])
+	
+	paper_map = Map(map.width,map.height)
+	
 	trapxys = []
 	for z in range(0,(24+player_floor*12)):
 		trap_type = z%4
@@ -394,10 +416,19 @@ def make_map(map,entities,G_TRAP_CHARS,player_floor):
 			if entity.x == artifact.x and entity.y ==artifact.y:
 				entities.remove(entity)
 		entities.append(artifact)
+
+	walkable_map = map.walls_to_other(player_floor,paper_map)
+
+	while True:
+		xrand = randint(0,map.width-1)
+		yrand = randint(0,map.height-1)
+		print(xrand,yrand,walkable_map[xrand][yrand],map.t_[xrand][yrand].type)
+		if walkable_map[xrand][yrand] == True and map.t_[xrand][yrand].type == "floor" and entity_at_xy(entities,xrand,yrand) == False:
+			break
+
+	entities[0].x = xrand
+	entities[0].y = yrand
 	
-	paper_map = Map(map.width,map.height)
-	
-	map.walls_to_other(player_floor,paper_map)
 	map.walls_and_pits()
 	paper_map.walls_and_pits()
 

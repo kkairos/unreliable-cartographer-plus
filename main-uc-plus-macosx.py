@@ -69,13 +69,13 @@ def main():
 
 	#basic screen setup
 	
-	screen_width = 80
-	screen_height = 45
-	map_w = 60
-	map_h = 40
+	screen_width = 64
+	screen_height = 36
+	map_w = 44
+	map_h = 31
 	
-	map_console_w = 60
-	map_console_h = 40
+	map_console_w = 44
+	map_console_h = 31
 
 	#tcod events setup
 
@@ -84,7 +84,7 @@ def main():
 	
 	#create player and put player in entities array
 
-	player = ec.Entity(4,2,CHARS["person"],"white","black",1,cx.Faction.Ally,cx.DrawOrder.PLAYER,True,"You")
+	player = ec.Entity(3,3,CHARS["person"],"white","black",1,cx.Faction.Ally,cx.DrawOrder.PLAYER,True,"You")
 	entities = [player]
 
 	player_state = 1	#player is alive
@@ -119,14 +119,14 @@ def main():
 	
 	status_console = tcod.console.Console(main_console.width-map_console.width,main_console.height,"F",None)
 	status_console.print(status_console.width//2,1,"The Unreliable\nCartographer",COLORS["white"],COLORS["black"],tcod.BKGND_DEFAULT,tcod.CENTER)
-	re.legend_print(status_console,G_GLYPH_CHARS,1,4)
+	re.legend_print(status_console,G_GLYPH_CHARS,0,3)
 	
 	messages = []
 	
 	for x in range(0,message_console.height):
 		messages.append("")
 	
-	welcome_message = "Welcome to *The Unreliable Cartographer.* This is a game about exploring ancient ruins to find an ancient artifact with a map of increasingly dubious accuracy and dodging traps along the way. Controls are on the left panel. We hope you like it!" + chr(254) + chr(511)
+	welcome_message = "Welcome to The Unreliable Cartographer, a game about exploring ancient ruins to find an ancient artifact with a map of increasingly dubious accuracy. Controls are on the left panel. We hope you like it!"
 	re.messageprint(message_console, welcome_message, messages )
 	
 	fg_sh = 15
@@ -177,7 +177,7 @@ def main():
 						reset_trigger = False
 					if jump:
 						if not jump_trigger:
-							re.messageprint(message_console, "Press "+ chr(511)+ " to jump 2 squares away in a direction, any other key to cancel.", messages )
+							re.messageprint(message_console, "Press "+ chr(511)+ " to jump; other keys cancel.", messages )
 							jump_trigger = True
 							no_enemies = True
 						elif jump_trigger:		
@@ -234,20 +234,18 @@ def main():
 						level_map.t_.clear()
 						paper_map.t_.clear()
 						
-						player = ec.Entity(4,2,CHARS["person"],"white","black",1,cx.Faction.Ally,cx.DrawOrder.PLAYER,True,"You")
+						player = ec.Entity(3,3,CHARS["person"],"white","black",1,cx.Faction.Ally,cx.DrawOrder.PLAYER,True,"You")
 						entities = [player]
 						
 						player_gold = 0
 						player_floor = 1
-						player.x = 4
-						player.y = 2
 						
 						shuffle(G_TEMP_CHARS)
 						G_TRAP_CHARS = G_TEMP_CHARS[0:4]
 						G_GLYPH_CHARS = G_TEMP_CHARS[4:8]
 						for x in range(0,len(G_GLYPH_CHARS)):
 							G_GLYPH_CHARS[x]+=64
-						re.legend_print(status_console,G_GLYPH_CHARS,1,4)
+						re.legend_print(status_console,G_GLYPH_CHARS,0,3)
 						map_console.clear(15,COLORS["black"],)
 						level_map, paper_map = new_level(map_w,map_h,entities,G_TRAP_CHARS,G_GLYPH_CHARS,player_floor)
 						new_floor = False
@@ -260,7 +258,7 @@ def main():
 				if controlchange:
 					no_enemies = True
 					cx.SETTINGS[0]["sel"] = (cx.SETTINGS[0]["sel"] + 1)% 3
-					re.legend_print(status_console,G_GLYPH_CHARS,1,4)
+					re.legend_print(status_console,G_GLYPH_CHARS,0,3)
 					quit_trigger = False
 					reset_trigger = False
 					re.messageprint(message_console, "Changed controls to " + cx.INPUT_SEL_NAME[cx.SETTINGS[0]["sel"]] + ".", messages )
@@ -274,13 +272,11 @@ def main():
 			level_map.t_.clear()
 			paper_map.t_.clear()
 		
-			player = ec.Entity(4,2,CHARS["person"],"white","black",1,cx.Faction.Ally,cx.DrawOrder.PLAYER,True,"You")
+			player = ec.Entity(3,3,CHARS["person"],"white","black",1,cx.Faction.Ally,cx.DrawOrder.PLAYER,True,"You")
 			
 			entities = [player]
 			
 			player_floor += 1
-			player.x = 4
-			player.y = 2
 			
 			map_console.clear()
 			level_map, paper_map = new_level(map_w,map_h,entities,G_TRAP_CHARS,G_GLYPH_CHARS,player_floor)

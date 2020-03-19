@@ -123,34 +123,34 @@ def draw_con(main_console,map_console,xpos,ypos):
 
 def legend_print(console,chars,x,y):
 	
-	console.print(x,y,"Trap Legend",drawval.COLORS["white"],drawval.COLORS["black"],tcod.BKGND_DEFAULT,tcod.LEFT)
+	console.print(x,y,"MAP LEGEND",drawval.COLORS["white"],drawval.COLORS["black"],tcod.BKGND_DEFAULT,tcod.LEFT)
 	
 	y+=2
 	
 	for z in range(0,4):
 
 		z2 = z*2
-		console.put_char(x+0,y+z2, ord("*"),tcod.BKGND_DEFAULT)
-		console.put_char(x+1,y+z2, chars[z],tcod.BKGND_DEFAULT)
-		console.put_char(x+2,y+z2, ord("*"),tcod.BKGND_DEFAULT)
-		console.fg[x][y+z2] = drawval.COLORS["map-red"]
-		console.fg[x+1][y+z2] = drawval.COLORS["map-red"]
-		console.fg[x+2][y+z2] = drawval.COLORS["map-red"]
-		console.print(x+4,y+z2,cx.TRAPS[z]["name"],drawval.COLORS["white"],drawval.COLORS["black"],tcod.BKGND_DEFAULT,tcod.LEFT)
+		console.put_char(x+0,y+z, ord("*"),tcod.BKGND_DEFAULT)
+		console.put_char(x+1,y+z, chars[z],tcod.BKGND_DEFAULT)
+		console.put_char(x+2,y+z, ord("*"),tcod.BKGND_DEFAULT)
+		console.fg[x][y+z] = drawval.COLORS["map-red"]
+		console.fg[x+1][y+z] = drawval.COLORS["map-red"]
+		console.fg[x+2][y+z] = drawval.COLORS["map-red"]
+		console.print(x+3,y+z,cx.TRAPS[z]["name"],drawval.COLORS["white"],drawval.COLORS["black"],tcod.BKGND_DEFAULT,tcod.LEFT)
 	
-	console.print(x,y+8,"Other",drawval.COLORS["white"],drawval.COLORS["black"],tcod.BKGND_DEFAULT,tcod.LEFT)
+	console.print(x,y+5,"Other",drawval.COLORS["white"],drawval.COLORS["black"],tcod.BKGND_DEFAULT,tcod.LEFT)
 	
-	console.put_char(x+0,y+10, ord("*"),tcod.BKGND_DEFAULT)
-	console.put_char(x+1,y+10, drawval.CHARS["gold"]+64,tcod.BKGND_DEFAULT)
-	console.put_char(x+2,y+10, ord("*"),tcod.BKGND_DEFAULT)
-	console.fg[x][y+10] = drawval.COLORS["map-red"]
-	console.fg[x+1][y+10] = drawval.COLORS["map-red"]
-	console.fg[x+2][y+10] = drawval.COLORS["map-red"]
-	console.print(x+4,y+10,"Gold!",drawval.COLORS["white"],drawval.COLORS["black"],tcod.BKGND_DEFAULT,tcod.LEFT)
+	console.put_char(x+0,y+7, ord("*"),tcod.BKGND_DEFAULT)
+	console.put_char(x+1,y+7, drawval.CHARS["gold"]+64,tcod.BKGND_DEFAULT)
+	console.put_char(x+2,y+7, ord("*"),tcod.BKGND_DEFAULT)
+	console.fg[x][y+7] = drawval.COLORS["map-red"]
+	console.fg[x+1][y+7] = drawval.COLORS["map-red"]
+	console.fg[x+2][y+7] = drawval.COLORS["map-red"]
+	console.print(x+4,y+7,"Gold!",drawval.COLORS["white"],drawval.COLORS["black"],tcod.BKGND_DEFAULT,tcod.LEFT)
 
 	i_to_display = cx.SETTINGS[0]["sel"]
 
-	console.print(x,y+12,"Controls\n(TAB changes)",drawval.COLORS["white"],drawval.COLORS["black"],tcod.BKGND_DEFAULT,tcod.LEFT)
+	console.print(x,y+10,"Controls",drawval.COLORS["white"],drawval.COLORS["black"],tcod.BKGND_DEFAULT,tcod.LEFT)
 	
 	console.print(x,y+23,"R: Reset",drawval.COLORS["white"],drawval.COLORS["black"],tcod.BKGND_DEFAULT,tcod.LEFT)
 	console.print(x,y+25,"ESC: Quit",drawval.COLORS["white"],drawval.COLORS["black"],tcod.BKGND_DEFAULT,tcod.LEFT)

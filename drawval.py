@@ -38,10 +38,10 @@ COLORS = {
 	"map-green" : (25,100,25),
 	"white" : (255,255,255),
 	"black" : (0,0,0),
+	"stairs-fg" : (205,110,46),
+	"stairs-bg" : (35,35,35),
 	"gold-fg" : (245,150,86),
 	"boulder-fg" : (185,185,175),
-	"tilegrey" : (50,50,50),
-	"darkgrey" : (42,42,42),
 	}
 
 TRAP_CHARS = []

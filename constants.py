@@ -55,27 +55,24 @@ SETTINGS = [
 	]
 
 INPUT_SEL = [
-	"MOVE:    REST: 5,. \n"\
-	"\n7 8 9    JUMP: F   \n"\
-	" \|/              \n"\
-	"4-@-6             \n"\
-	" /|\              \n"\
-	"1 2 3             ",
-	"MOVE:    REST: S,. \n"\
-	"\nQ W E    JUMP: F   \n"\
-	" \|/              \n"\
-	"A-@-D             \n"\
-	" /|\              \n"\
-	"Z X C             ",
-	"MOVE:    REST: .   \n"\
-	"\nY K U    JUMP: F   \n"\
-	" \|/              \n"\
-	"H-@-L             \n"\
-	" /|\              \n"\
-	"B J N             "
+	"789  REST: [5],[.] \n"\
+	"4@6  JUMP: [F] \n"\
+	"123",
+	"QWE  REST: [5],[.] \n"\
+	"A@D  JUMP: [F] \n"\
+	"ZXC",
+	"YKU  REST: [5],[.] \n"\
+	"H@L  JUMP: [F] \n"\
+	"BJN",
 	]
 	
-INPUT_SEL_NAME = ["standard numpad", "laptop alternate numpad", "vi-keys"]
+INPUT_CON = [
+	"Control Scheme:  [C]\n"\
+	"Reset Game:      [R]\n"\
+	"Quit Game:       [ESC]\n"
+]
+	
+INPUT_SEL_NAME = ["standard numpad", "laptop \"numpad\"", "vi-keys"]
 
 walldraw = []
 for x in range(0,16):
@@ -122,13 +119,22 @@ TERRAIN = {
 		"bg" : "floor-bg",
 		"type" : "floor",
 		},
+	"door" : {
+		"block_m" : False,
+		"block_j" : False,
+		"block_s" : False,
+		"char" : 273,
+		"fg" : "floor-fg",
+		"bg" : "floor-bg",
+		"type" : "door",
+		},
 	"stairs" : {
 		"block_m" : False,
 		"block_j" : False,
 		"block_s" : False,
 		"char" : 273,
-		"fg" : "pit-fg",
-		"bg" : "pit-bg",
+		"fg" : "stairs-fg",
+		"bg" : "stairs-bg",
 		"type" : "floor",
 		},
 	"pit" : {
